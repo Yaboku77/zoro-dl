@@ -46,7 +46,6 @@ class ZORO:
         resolution="1080p",
         dl_type="both",
         group_tag="NOGRP",
-        save_dir="/content/drive/MyDrive/New",
     ):
         """
         Initialize the ZORO class with required parameters.
@@ -69,7 +68,7 @@ class ZORO:
         self.end_code = str(uuid.uuid4())
         self.custom_group_tag = group_tag
         self.separator = "-" * 70
-        self.save_dir = save_dir
+        
         
 
         self.api = AnimeAPI()
