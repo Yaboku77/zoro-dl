@@ -53,6 +53,7 @@ class ZORO:
 
         Args:
             url (str): The URL from ZORO that needs to be processed.
+            save_dir (str): Path Is Required
             season (str, optional): The season which will be added to the filename. Defaults to "1".
             episode (str or None, optional): Episodes to be downloaded. Can be a range of episodes (e.g., "1-5"), a single episode (e.g., "10"), or None to download the complete season. Defaults to None.
             resolution (str, optional): The resolution for downloading (e.g., "1080p"). Defaults to "1080p".
@@ -60,6 +61,7 @@ class ZORO:
             group_tag (str, optional): Custom group tag for metadata. Defaults to "Conan76".
         """
         self.zoro_url = url
+        self.save_dir = save_dir
         self.season = season
         self.requested_episode = episode
         self.resolution = resolution.replace("p", "")
@@ -68,7 +70,7 @@ class ZORO:
         self.end_code = str(uuid.uuid4())
         self.custom_group_tag = group_tag
         self.separator = "-" * 70
-        self.save_dir = save_dir
+        
 
         self.api = AnimeAPI()
         self.episodes = self.api.get_episodes(self.zoro_id)
