@@ -49,7 +49,7 @@ def is_sub_dub(episode_id):
              only a dubbed version ('dub'), only a subbed version ('sub'), or neither ('unknown').
     """
     html = requests.get(
-        f"https://aniwatch.to/ajax/v2/episode/servers?episodeId={episode_id}"
+        f"https://hianime.to/ajax/v2/episode/servers?episodeId={episode_id}"
     ).json()["html"]
 
     if "DUB:" in html and "SUB:" in html:
