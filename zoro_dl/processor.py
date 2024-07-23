@@ -383,14 +383,14 @@ class ZORO:
                     ]
                 )
 
-        out_name = os.path.join(save_dir, "{}.mkv".format(self.end_code))  # Full path to save file
+        out_name = os.path.join(self.save_dir, "{}.mkv".format(self.end_code))  # Full path to save file
         ffmpeg_opts.extend(["-c", "copy", out_name])
 
         subprocess.check_call(ffmpeg_opts)
 
         _, height = get_video_resolution(out_name)
 
-        final_out_name = os.path.join(save_dir, "{name}.mkv".format(
+        final_out_name = os.path.join(self.save_dir, "{name}.mkv".format(
             gr=self.custom_group_tag,
             name=self.complete_data["name"],
             resolution=height,
