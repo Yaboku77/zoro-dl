@@ -554,6 +554,13 @@ class ZORO:
             )
             return
 
+        self.complete_data = {
+            "sources": sources,
+            "subtitles": subtitles,
+            # ... (rest of your data)
+        }
+        print("Complete Data:", self.complete_data) # Print the complete_data dictionary
+
         # If Single Episode Requested
         if self.episode_end == 0:
             print(self.separator)
