@@ -294,18 +294,11 @@ class ZORO:
             )
 
     def mux_files(self):
-        """
-        Mux video and subtitle files into a single MKV file using FFmpeg.
-
-        This method constructs FFmpeg commands to mux video and subtitle files into a single MKV file.
-        It maps video, audio, and subtitle streams accordingly. Metadata such as language and titles
-        are added to the resulting MKV file. The final MKV file is named based on various parameters,
-        including the custom group tag, video and subtitle language, and resolution.
-
-        Returns:
-            str: The filename of the resulting muxed MKV file.
-        """
+        """Mux video and subtitle files into MKV, saving to a custom path."""
         print(colored_text("[+] MUXING FILES", "green"))
+
+        save_dir = input("/content/drive/MyDrive/Encode/")
+        os.makedirs(save_dir, exist_ok=True)
 
         ffmpeg_opts = [
             "ffmpeg",
@@ -390,27 +383,24 @@ class ZORO:
                     ]
                 )
 
-        out_name = "{}.mkv".format(self.end_code)
-
+        out_name = os.path.join(save_dir, "{}.mkv".format(self.end_code))  # Full path to save file
         ffmpeg_opts.extend(["-c", "copy", out_name])
 
         subprocess.check_call(ffmpeg_opts)
 
         _, height = get_video_resolution(out_name)
 
-        out_file_name = (
-            "{gr} {name} [{resolution}p] [{audio}].mkv".format(
-                gr=self.custom_group_tag,
-                name=self.complete_data["name"],
-                resolution=height,
-                audio=self.lang_file_name_data,
-                subs=" [{}]".format(self.subs_file_name_data) if self.subs_file_name_data != "NO-SUBS" else "",
-            )
-        )
+        final_out_name = os.path.join(save_dir, "{gr} {name} [{resolution}p] [{audio}] [{subs}].mkv".format(
+            gr=self.custom_group_tag,
+            name=self.complete_data["name"],
+            resolution=height,
+            audio=self.lang_file_name_data,
+            subs=self.subs_file_name_data if self.subs_file_name_data != "NO-SUBS" else "",
+        ))
 
-        os.rename(out_name, out_file_name)
+        os.rename(out_name, final_out_name)  # Rename to final file name within the directory
 
-        return out_file_name
+        return final_out_name
 
     def clean_up(self):
         """
