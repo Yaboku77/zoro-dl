@@ -40,6 +40,7 @@ class ZORO:
 
     def __init__(
         self,
+        save_dir,
         url,
         season="1",
         episode=None,
@@ -67,6 +68,7 @@ class ZORO:
         self.end_code = str(uuid.uuid4())
         self.custom_group_tag = group_tag
         self.separator = "-" * 70
+        self.save_dir = save_dir
 
         self.api = AnimeAPI()
         self.episodes = self.api.get_episodes(self.zoro_id)
