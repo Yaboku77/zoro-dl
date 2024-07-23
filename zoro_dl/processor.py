@@ -376,7 +376,7 @@ class ZORO:
         ffmpeg_opts.extend(["-metadata", f"encoded_by={self.custom_group_tag}"])
         ffmpeg_opts.extend(["-metadata:s:a", f"title={self.custom_group_tag}"])
         ffmpeg_opts.extend(
-            ["-metadata:s:v", f"title={self.custom_group_tag} - Sourced from ZORO"]
+            ["-metadata:s:v", f"title={self.custom_group_tag}"]
         )
 
         # Adding Subtitle Title metadata
@@ -399,7 +399,7 @@ class ZORO:
         _, height = get_video_resolution(out_name)
 
         out_file_name = (
-            "[{gr}] {name} [{resolution}p] [WEB] [{audio}]{subs}.mkv".format(
+            "{gr} {name} [{resolution}p] [{audio}].mkv".format(
                 gr=self.custom_group_tag,
                 name=self.complete_data["name"],
                 resolution=height,
