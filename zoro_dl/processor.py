@@ -121,9 +121,9 @@ class ZORO:
             else "{}".format(self.season)
         )
         title_episode = (
-            "0{}".format(episode_number)
-            if int(episode_number) < 10
-            else "{}".format(episode_number)
+            "0{}".format(self.complete_data["episode"])
+            if int(self.complete_data["episode"]) < 10
+            else "{}".format(self.complete_data["episode"])
         )
 
         watch_id = episode["id"].split("$episode")[0]
