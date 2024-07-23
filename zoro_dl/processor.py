@@ -154,6 +154,7 @@ class ZORO:
             "season": int(self.season),
             "episode": episode_number,
             "name": f"{title_episode}. {episode['title']}",
+            "name2" f"[AnimeKaizoku] {self.api.get_info(self.zoro_id, 'title')} S{title_season}E{title_episode} - {episode['title']} [Yaboku]",
         }
 
         # Using ThreadPoolExecutor for fetching watch and subtitle information concurrently
