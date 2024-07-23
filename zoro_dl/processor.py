@@ -390,7 +390,7 @@ class ZORO:
 
         _, height = get_video_resolution(out_name)
 
-        final_out_name = os.path.join(save_dir, "{gr} {name} [{resolution}p] [{audio}] [{subs}].mkv".format(
+        final_out_name = os.path.join(save_dir, "{name}.mkv".format(
             gr=self.custom_group_tag,
             name=self.complete_data["name"],
             resolution=height,
