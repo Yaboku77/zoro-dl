@@ -294,11 +294,11 @@ class ZORO:
             )
 
     def mux_files(self):
-        """Mux video and subtitle files into MKV, saving to a custom path."""
+        """Mux video and subtitle files into MKV, saving to a fixed path."""
         print(colored_text("[+] MUXING FILES", "green"))
 
-        save_dir = input("/content/drive/MyDrive/Encode/")
-        os.makedirs(save_dir, exist_ok=True)
+        save_dir = "/content/drive/MyDrive/Encode/"  # Set your desired directory here
+        os.makedirs(save_dir, exist_ok=True) 
 
         ffmpeg_opts = [
             "ffmpeg",
