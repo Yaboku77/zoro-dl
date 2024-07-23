@@ -296,6 +296,11 @@ class ZORO:
                 "subtitle_{}_{}.vtt".format(subs["lang_639_2"], self.end_code),
             )
 
+
+        save_dir = "/content/drive/MyDrive/Encode/"  # Set your desired directory here
+        os.makedirs(save_dir, exist_ok=True) 
+
+    
     def mux_files(self):
         """Mux video and subtitle files into MKV, saving to a fixed path."""
         print(colored_text("[+] MUXING FILES", "green"))
