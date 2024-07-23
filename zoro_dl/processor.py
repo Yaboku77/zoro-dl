@@ -121,9 +121,9 @@ class ZORO:
             else "{}".format(self.season)
         )
         title_episode = (
-            "0{}".format(episode_number)
-            if int(episode_number) < 10
-            else "{}".format(episode_number)
+            "0{}".format(self.complete_data["episode"])
+            if int(self.complete_data["episode"]) < 10
+            else "{}".format(self.complete_data["episode"])
         )
 
         watch_id = episode["id"].split("$episode")[0]
@@ -390,15 +390,9 @@ class ZORO:
 
         _, height = get_video_resolution(out_name)
 
-        final_out_name = os.path.join(save_dir, "{gr} {name} [{resolution}p] [{audio}] [{subs}].mkv".format(
-            gr=self.custom_group_tag,
-            name=self.complete_data["name"],
-            resolution=height,
-            audio=self.lang_file_name_data,
-            subs=self.subs_file_name_data if self.subs_file_name_data != "NO-SUBS" else "",
-        ))
+        final_out_name = os.path.join(save_dir, f"{title_episode}. {self.complete_data['episodeTitle']}.mkv")
 
-        os.rename(out_name, final_out_name)  # Rename to final file name within the directory
+        os.rename(out_name, final_out_name)  # Rename to final file name
 
         return final_out_name
 
