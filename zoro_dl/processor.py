@@ -46,6 +46,7 @@ class ZORO:
         resolution="1080p",
         dl_type="both",
         group_tag="NOGRP",
+        save_dir="/content/drive/MyDrive/Encode/",  # Add this parameter with a default value
     ):
         """
         Initialize the ZORO class with required parameters.
@@ -57,6 +58,7 @@ class ZORO:
             resolution (str, optional): The resolution for downloading (e.g., "1080p"). Defaults to "1080p".
             dl_type (str, optional): Download type: "sub", "dub", or "both". Defaults to "both". "sub" will download in JPN Audio with All Available Subtitles, "dub" will download in ENG Audio with All Available Subtitles and "both" with download in JPN-ENG with All Available Subtitles. Make sure to verify the series which you want to DL in "both",If it has same duration in both sub and dub player on ZORO, Only then it will work or else you will have audio sync issues
             group_tag (str, optional): Custom group tag for metadata. Defaults to "Conan76".
+            save_dir (str, optional): Directory where the final output file will be saved. Defaults to "/content/drive/MyDrive/Encode/".
         """
         self.zoro_url = url
         self.season = season
@@ -67,8 +69,7 @@ class ZORO:
         self.end_code = str(uuid.uuid4())
         self.custom_group_tag = group_tag
         self.separator = "-" * 70
-        
-        
+        self.save_dir = save_dir  # Add this line
 
         self.api = AnimeAPI()
         self.episodes = self.api.get_episodes(self.zoro_id)
@@ -299,10 +300,6 @@ class ZORO:
     def mux_files(self):
         """Mux video and subtitle files into MKV, saving to a fixed path."""
         print(colored_text("[+] MUXING FILES", "green"))
-
-        save_dir = "/content/drive/MyDrive/Encode/"  # Set your desired directory here
-        os.makedirs(save_dir, exist_ok=True) 
-        
         ffmpeg_opts = [
             "ffmpeg",
             "-y",
