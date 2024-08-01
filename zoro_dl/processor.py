@@ -39,41 +39,40 @@ class ZORO:
     """
 
     def __init__(
-    self,
-    url,
-    season="1",
-    episode=None,
-    resolution="1080p",
-    dl_type="both",
-    group_tag="NOGRP",
-    save_dir="/content/drive/MyDrive/Encode/"  # Add save_dir parameter
-):
-    """
-    Initialize the ZORO class with required parameters.
+        self,
+        url,
+        season="1",
+        episode=None,
+        resolution="1080p",
+        dl_type="both",
+        group_tag="NOGRP",
+    ):
+        """
+        Initialize the ZORO class with required parameters.
 
-    Args:
-        url (str): The URL from ZORO that needs to be processed.
-        season (str, optional): The season which will be added to the filename. Defaults to "1".
-        episode (str or None, optional): Episodes to be downloaded. Can be a range of episodes (e.g., "1-5"), a single episode (e.g., "10"), or None to download the complete season. Defaults to None.
-        resolution (str, optional): The resolution for downloading (e.g., "1080p"). Defaults to "1080p".
-        dl_type (str, optional): Download type: "sub", "dub", or "both". Defaults to "both". "sub" will download in JPN Audio with All Available Subtitles, "dub" will download in ENG Audio with All Available Subtitles and "both" with download in JPN-ENG with All Available Subtitles. Make sure to verify the series which you want to DL in "both",If it has same duration in both sub and dub player on ZORO, Only then it will work or else you will have audio sync issues
-        group_tag (str, optional): Custom group tag for metadata. Defaults to "Conan76".
-        save_dir (str, optional): Directory to save muxed files. Defaults to "/content/drive/MyDrive/Encode/".
-    """
-    self.zoro_url = url
-    self.season = season
-    self.requested_episode = episode
-    self.resolution = resolution.replace("p", "")
-    self.dl_type = dl_type
-    self.zoro_id = extract_zoro_id(self.zoro_url)
-    self.end_code = str(uuid.uuid4())
-    self.custom_group_tag = group_tag
-    self.separator = "-" * 70
-    self.save_dir = save_dir  # Set the save_dir attribute
+        Args:
+            url (str): The URL from ZORO that needs to be processed.
+            season (str, optional): The season which will be added to the filename. Defaults to "1".
+            episode (str or None, optional): Episodes to be downloaded. Can be a range of episodes (e.g., "1-5"), a single episode (e.g., "10"), or None to download the complete season. Defaults to None.
+            resolution (str, optional): The resolution for downloading (e.g., "1080p"). Defaults to "1080p".
+            dl_type (str, optional): Download type: "sub", "dub", or "both". Defaults to "both". "sub" will download in JPN Audio with All Available Subtitles, "dub" will download in ENG Audio with All Available Subtitles and "both" with download in JPN-ENG with All Available Subtitles. Make sure to verify the series which you want to DL in "both",If it has same duration in both sub and dub player on ZORO, Only then it will work or else you will have audio sync issues
+            group_tag (str, optional): Custom group tag for metadata. Defaults to "Conan76".
+        """
+        self.zoro_url = url
+        self.season = season
+        self.requested_episode = episode
+        self.resolution = resolution.replace("p", "")
+        self.dl_type = dl_type
+        self.zoro_id = extract_zoro_id(self.zoro_url)
+        self.end_code = str(uuid.uuid4())
+        self.custom_group_tag = group_tag
+        self.separator = "-" * 70
+        
+        
 
-    self.api = AnimeAPI()
-    self.episodes = self.api.get_episodes(self.zoro_id)
-    self.setup_episode_start_end()
+        self.api = AnimeAPI()
+        self.episodes = self.api.get_episodes(self.zoro_id)
+        self.setup_episode_start_end()
 
     def setup_episode_start_end(self):
         """
