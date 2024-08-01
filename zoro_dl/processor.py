@@ -52,7 +52,6 @@ class ZORO:
 
         Args:
             url (str): The URL from ZORO that needs to be processed.
-            save_dir (str): Path Is Required
             season (str, optional): The season which will be added to the filename. Defaults to "1".
             episode (str or None, optional): Episodes to be downloaded. Can be a range of episodes (e.g., "1-5"), a single episode (e.g., "10"), or None to download the complete season. Defaults to None.
             resolution (str, optional): The resolution for downloading (e.g., "1080p"). Defaults to "1080p".
