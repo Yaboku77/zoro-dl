@@ -296,111 +296,76 @@ class ZORO:
                 "subtitle_{}_{}.vtt".format(subs["lang_639_2"], self.end_code),
             )
 
-    
     def mux_files(self):
-        """Mux video and subtitle files into MKV, saving to a fixed path."""
-        print(colored_text("[+] MUXING FILES", "green"))
-        ffmpeg_opts = [
-            "ffmpeg",
-            "-y",
-        ]
+    """
+    Mux video and subtitle files into MKV, saving to a fixed path.
+    """
+    print(colored_text("[+] MUXING FILES", "green"))
 
-        # Adding Video Files
+    # Initialize FFmpeg command
+    ffmpeg_opts = ["ffmpeg", "-y"]
 
-        for source in self.complete_data["sources"]:
-            video_filename = f"{self.complete_data['malID']}_{source['subOrdub']}_{self.end_code}.mp4"
-            ffmpeg_opts.extend(["-i", video_filename])
+    # Verify and add video files
+    for source in self.video_sources:
+        video_filename = f"{self.complete_data['malID']}_{source['subOrdub']}_{self.end_code}.mp4"
+        if not os.path.exists(video_filename):
+            print(f"[+] ERROR - Video file not found: {video_filename}")
+            return None  # Exit if video file is missing
+        ffmpeg_opts.extend(["-i", video_filename])
 
-        # Adding Subtitles Files
+    # Verify and add subtitle files
+    subtitle_count = 0
+    for subtitle in self.subtitle_sources:
+        subtitle_filename = f"subtitle_{subtitle['lang_639_2']}_{self.end_code}.vtt"
+        if os.path.exists(subtitle_filename):
+            ffmpeg_opts.extend(["-i", subtitle_filename])
+            subtitle_count += 1
 
-        if len(self.subtitle_sources) >= 1:
-            for source in self.subtitle_sources:
-                ffmpeg_opts.extend(
-                    [
-                        "-i",
-                        "subtitle_{}_{}.vtt".format(
-                            source["lang_639_2"], self.end_code
-                        ),
-                    ]
-                )
+    if subtitle_count == 0:
+        print("[+] WARNING - No valid subtitle files found. Proceeding without subtitles.")
 
-        # Mapping 1st Video can be JPN if dl_type == sub or ENG if dl_type == dub
-        ffmpeg_opts.extend(["-map", "0:v:0"])
+    # Add video and audio mappings
+    ffmpeg_opts.extend(["-map", "0:v:0", "-map", "0:a:0"])  # Video and first audio
+    if self.dl_type == "both" and len(self.video_sources) > 1:
+        ffmpeg_opts.extend(["-map", "1:a:0"])  # Second audio
 
-        # Mapping Audio from the 1st Video Source. It can be JPN or ENG acc to the dl_type
-        ffmpeg_opts.extend(["-map", "0:a:0"])
+    # Add subtitle mappings
+    for i in range(subtitle_count):
+        ffmpeg_opts.extend(["-map", f"{len(self.video_sources) + i}:s:0"])
 
-        # Mapping Audio from the 2nd Video Source Only If dl_type == both only since then it will have the second Video Source
+    # Add metadata for audio and subtitles
+    language_value = {"sub": "jpn", "dub": "eng", "both": "jpn"}.get(self.dl_type, "")
+    ffmpeg_opts.extend(["-metadata:s:a:0", f"language={language_value}"])
+    if self.dl_type == "both":
+        ffmpeg_opts.extend(["-metadata:s:a:1", "language=eng"])
 
-        if self.dl_type == "both":
+    for i, subtitle in enumerate(self.subtitle_sources):
+        lang_code = subtitle.get("lang_639_2", "und")  # Default to 'und' for undefined
+        ffmpeg_opts.extend(["-metadata:s:s:{0}".format(i), f"language={lang_code}"])
+        ffmpeg_opts.extend(["-metadata:s:s:{0}".format(i), f"title={subtitle['lang']}"])
 
-            ffmpeg_opts.extend(["-map", "1:a:0"])
+    # Add general metadata
+    ffmpeg_opts.extend(["-metadata", f"encoded_by={self.custom_group_tag}"])
+    ffmpeg_opts.extend(["-metadata:s:a", f"title={self.custom_group_tag}"])
+    ffmpeg_opts.extend(["-metadata:s:v", f"title={self.custom_group_tag}"])
 
-        # Mapping Subtitle Source only if dl_type == both
+    # Set output file path
+    output_file = os.path.join(self.save_dir, f"{self.end_code}.mkv")
+    ffmpeg_opts.extend(["-c", "copy", output_file])
 
-        if len(self.subtitle_sources) >= 1:
-            for i in range(len(self.subtitle_sources)):
-                ffmpeg_opts.extend(["-map", f"{len(self.video_sources)+i}:s:0"])
+    # Debug: Print FFmpeg command
+    print("Generated FFmpeg Command:")
+    print(" ".join(ffmpeg_opts))
 
-        # Adding Language Metadata of Subtitles only if dl_type == both
-
-        if len(self.subtitle_sources) >= 1:
-            for i in range(len(self.subtitle_sources)):
-                ffmpeg_opts.extend(
-                    [
-                        "-metadata:s:s:{0}".format(i),
-                        f"language={self.subtitle_sources[i]['lang_639_2']}",
-                    ]
-                )
-
-        # Adding Audio Metadata
-
-        language_value = {"sub": "jpn", "dub": "eng", "both": "jpn"}.get(
-            self.dl_type, ""
-        )
-
-        ffmpeg_opts.extend(["-metadata:s:a:0", f"language={language_value}"])
-
-        if self.dl_type == "both":
-            ffmpeg_opts.extend(["-metadata:s:a:1", "language=eng"])
-
-        # Adding Encoded by, Audio Title and Video Title Metadata
-
-        ffmpeg_opts.extend(["-metadata", f"encoded_by={self.custom_group_tag}"])
-        ffmpeg_opts.extend(["-metadata:s:a", f"title={self.custom_group_tag}"])
-        ffmpeg_opts.extend(
-            ["-metadata:s:v", f"title={self.custom_group_tag}"]
-        )
-
-        # Adding Subtitle Title metadata
-
-        if len(self.subtitle_sources) >= 1:
-            for i in range(len(self.subtitle_sources)):
-                ffmpeg_opts.extend(
-                    [
-                        "-metadata:s:s:{0}".format(i),
-                        f"title={self.subtitle_sources[i]['lang']}",
-                    ]
-                )
-
-        out_name = os.path.join(self.save_dir, "{}.mkv".format(self.end_code))  # Full path to save file
-        ffmpeg_opts.extend(["-c", "copy", out_name])
-
+    # Run FFmpeg command
+    try:
         subprocess.check_call(ffmpeg_opts)
-
-        _, height = get_video_resolution(out_name)
-
-        final_out_name = os.path.join(self.save_dir, "{name}.mkv".format(
-            gr=self.custom_group_tag,
-            name=self.complete_data["name"],
-            resolution=height,
-            audio=self.lang_file_name_data,
-            subs=self.subs_file_name_data if self.subs_file_name_data != "NO-SUBS" else "",
-        ))
-
-        os.rename(out_name, final_out_name)  # Rename to final file name within the directory
-
-        return final_out_name
+        print(f"[+] SUCCESS - File muxed successfully: {output_file}")
+        return output_file
+    except subprocess.CalledProcessError as e:
+        print(f"[+] ERROR - FFmpeg failed. Exit code: {e.returncode}")
+        print(f"Command: {' '.join(ffmpeg_opts)}")
+        return None
 
     def clean_up(self):
         """
