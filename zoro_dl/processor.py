@@ -296,7 +296,7 @@ class ZORO:
                 "subtitle_{}_{}.vtt".format(subs["lang_639_2"], self.end_code),
             )
 
-        def mux_files(self):
+    def mux_files(self):
         """Mux video and subtitle files into MKV, saving to a fixed path."""
         print(colored_text("[+] MUXING FILES", "green"))
         ffmpeg_opts = [
@@ -382,6 +382,7 @@ class ZORO:
         os.rename(out_name, final_out_name)
 
         return final_out_name
+
 
 
     def clean_up(self):
