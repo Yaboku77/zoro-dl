@@ -11,7 +11,7 @@ setuptools.setup(
     description="ZORO-DL - Download DUAL-AUDIO Multi SUBS Anime from ZORO",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/aditya76-git/zoro-dl",
+    url="https://github.com/Yaboku77/zoro-dl",
     include_package_data=True,
     package_data={'zoro_dl': ['static/*']},
     project_urls={
