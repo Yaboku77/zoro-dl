@@ -135,74 +135,63 @@ class ZORO:
         if self.dl_type == "both" and find_is_sub_dub == "both":
             watch_id_list.extend(
                 [
-                    f"{watch_id}$episode${episode_id}$sub",
-                    f"{watch_id}$episode${episode_id}$dub",
+                    f"{watch_id}<span class="math-inline">episode</span>{episode_id}$sub",
+                    f"{watch_id}<span class="math-inline">episode</span>{episode_id}$dub",
                 ]
             )
 
         elif self.dl_type == "dub":
-            watch_id_list.extend([f"{watch_id}$episode${episode_id}$dub"])
+            watch_id_list.extend([f"{watch_id}<span class="math-inline">episode</span>{episode_id}$dub"])
 
         elif self.dl_type == "sub":
-            watch_id_list.extend([f"{watch_id}$episode${episode_id}$sub"])
-
-        sources = []
-        subtitles = []
-        complete_data = {
-            "sources": sources,
-            "subtitles": subtitles,
-            "malID": self.api.get_info(self.zoro_id, "malID"),
-            "title": self.api.get_info(self.zoro_id, "title"),
-            "episodeTitle": episode["title"],
-            "season": int(self.season),
-            "episode": episode_number,
-            "name": f"{title_episode}. {episode['title']}",
-        }
-
-        # Using ThreadPoolExecutor for fetching watch and subtitle information concurrently
-        with ThreadPoolExecutor(max_workers=2) as executor:
-            executor.submit(self.fetch_video_sources, watch_id_list, sources)
-
-            if self.dl_type == "both" or self.dl_type == "sub":
-
-                executor.submit(
-                    self.fetch_subtitles_sources, watch_id_list[0], subtitles
-                )
-
-        self.complete_data = complete_data
-        self.video_sources = complete_data["sources"]
-        self.subtitle_sources = complete_data["subtitles"]
-
-        self.lang_file_name_data = (
-            "JPN-ENG"
-            if len(self.video_sources) > 1
-            else ("JPN" if self.video_sources[0]["subOrdub"] == "sub" else "ENG")
-        )
-
-        self.subs_file_name_data = (
-            "MULTI-SUBS" if len(self.subtitle_sources) > 1 else ("ENG-SUBS" if len(self.subtitle_sources) == 1 else "NO-SUBS")
-        )
-
-    def fetch_video_sources(self, watch_id_list, sources):
-        """
-        Fetch video sources for the specified watch IDs and store them in the 'sources' list.
-
-        This method queries the AnimeAPI for watch information using the provided watch IDs.
-        It extracts the URL of the first video source from Consumet API and determines whether it is a subtitle or dub source.
-        The retrieved video source details are then appended to the 'sources' list.
-
-        Args:
-            watch_id_list (list): List of watch IDs to fetch video sources for.
-            sources (list): List to store the fetched video source dictionaries.
-
-        Returns:
-            None
-        """
-        for wID in watch_id_list:
-            watch_info = self.api.get_watch_info(wID)
-            stream_dict = {
-                "url": watch_info["sources"][0]["url"],
-                "subOrdub": wID.split("$")[-1],
+            watch_id_list.extend([f"{watch_id}<span class="math-inline">episode</span>{episode_id}<span class="math-inline">sub"\]\)
+sources \= \[\]
+subtitles \= \[\]
+complete\_data \= \{
+"sources"\: sources,
+"subtitles"\: subtitles,
+"malID"\: self\.api\.get\_info\(self\.zoro\_id, "malID"\),
+"title"\: self\.api\.get\_info\(self\.zoro\_id, "title"\),
+"episodeTitle"\: episode\["title"\],
+"season"\: int\(self\.season\),
+"episode"\: episode\_number,
+"name"\: f"\{title\_episode\}\. \{episode\['title'\]\}",
+\}
+\# Using ThreadPoolExecutor for fetching watch and subtitle information concurrently
+with ThreadPoolExecutor\(max\_workers\=2\) as executor\:
+executor\.submit\(self\.fetch\_video\_sources, watch\_id\_list, sources\)
+if self\.dl\_type \=\= "both" or self\.dl\_type \=\= "sub"\:
+executor\.submit\(
+self\.fetch\_subtitles\_sources, watch\_id\_list\[0\], subtitles
+\)
+self\.complete\_data \= complete\_data
+self\.video\_sources \= complete\_data\["sources"\]
+self\.subtitle\_sources \= complete\_data\["subtitles"\]
+self\.lang\_file\_name\_data \= \(
+"JPN\-ENG"
+if len\(self\.video\_sources\) \> 1
+else \("JPN" if self\.video\_sources\[0\]\["subOrdub"\] \=\= "sub" else "ENG"\)
+\)
+self\.subs\_file\_name\_data \= \(
+"MULTI\-SUBS" if len\(self\.subtitle\_sources\) \> 1 else \("ENG\-SUBS" if len\(self\.subtitle\_sources\) \=\= 1 else "NO\-SUBS"\)
+\)
+def fetch\_video\_sources\(self, watch\_id\_list, sources\)\:
+"""
+Fetch video sources for the specified watch IDs and store them in the 'sources' list\.
+This method queries the AnimeAPI for watch information using the provided watch IDs\.
+It extracts the URL of the first video source from Consumet API and determines whether it is a subtitle or dub source\.
+The retrieved video source details are then appended to the 'sources' list\.
+Args\:
+watch\_id\_list \(list\)\: List of watch IDs to fetch video sources for\.
+sources \(list\)\: List to store the fetched video source dictionaries\.
+Returns\:
+None
+"""
+for wID in watch\_id\_list\:
+watch\_info \= self\.api\.get\_watch\_info\(wID\)
+stream\_dict \= \{
+"url"\: watch\_info\["sources"\]\[0\]\["url"\],
+"subOrdub"\: wID\.split\("</span>")[-1],
             }
             sources.append(stream_dict)
 
@@ -221,6 +210,7 @@ class ZORO:
             None
         """
         subtitle_info = self.api.get_watch_info(watch_id.replace("dub", "sub"))
+        # Filter out "Thumbnails" and subtitles with empty language codes
         subtitles_dict = [
             {
                 "lang": sub_data["lang"],
@@ -228,9 +218,10 @@ class ZORO:
                 "url": sub_data["url"],
             }
             for sub_data in subtitle_info["subtitles"]
-            if sub_data["lang"] != "Thumbnails"
+            if sub_data["lang"] != "Thumbnails" and get_language_code(sub_data["lang"].split(" - ")[0])  # Check for valid language code
         ]
         subtitles.extend(subtitles_dict)
+
 
     def download_video(self):
         """
@@ -296,7 +287,7 @@ class ZORO:
                 "subtitle_{}_{}.vtt".format(subs["lang_639_2"], self.end_code),
             )
 
-    
+
     def mux_files(self):
         """Mux video and subtitle files into MKV, saving to a fixed path."""
         print(colored_text("[+] MUXING FILES", "green"))
@@ -343,15 +334,16 @@ class ZORO:
                 ffmpeg_opts.extend(["-map", f"{len(self.video_sources)+i}:s:0"])
 
         # Adding Language Metadata of Subtitles only if dl_type == both
-
+        # Corrected section for adding subtitle language metadata
         if len(self.subtitle_sources) >= 1:
-            for i in range(len(self.subtitle_sources)):
-                ffmpeg_opts.extend(
-                    [
-                        "-metadata:s:s:{0}".format(i),
-                        f"language={self.subtitle_sources[i]['lang_639_2']}",
-                    ]
-                )
+            for i, sub_source in enumerate(self.subtitle_sources):  # Use enumerate for index and item
+                lang_code = sub_source.get('lang_639_2')
+                if lang_code:  # Make sure lang_code is not None or empty
+                    ffmpeg_opts.extend([
+                        f"-metadata:s:s:{i}",
+                        f"language={lang_code}"
+                    ])
+
 
         # Adding Audio Metadata
 
@@ -375,18 +367,26 @@ class ZORO:
         # Adding Subtitle Title metadata
 
         if len(self.subtitle_sources) >= 1:
-            for i in range(len(self.subtitle_sources)):
+            for i, sub_source in enumerate(self.subtitle_sources):  # Use enumerate again
                 ffmpeg_opts.extend(
                     [
                         "-metadata:s:s:{0}".format(i),
-                        f"title={self.subtitle_sources[i]['lang']}",
+                        f"title={sub_source['lang']}",  # Use the correct language name
                     ]
                 )
 
         out_name = os.path.join(self.save_dir, "{}.mkv".format(self.end_code))  # Full path to save file
         ffmpeg_opts.extend(["-c", "copy", out_name])
+        
+        try: # Added Try Except Block
+            subprocess.check_call(ffmpeg_opts)
+        except subprocess.CalledProcessError as e:
+            print(colored_text(f"[+] FFMPEG ERROR: {e}", "red"))
+            print(colored_text("[+] Trying again with different encoding settings...", "yellow"))
+            # Try a different encoding approach (libx264 for video, aac for audio) - More compatible
+            ffmpeg_opts[-2:] = ["-c:v", "libx264", "-c:a", "aac", "-strict", "experimental", out_name]
+            subprocess.check_call(ffmpeg_opts)
 
-        subprocess.check_call(ffmpeg_opts)
 
         _, height = get_video_resolution(out_name)
 
@@ -523,7 +523,7 @@ class ZORO:
         """
 
         if self.dl_type not in ["sub", "dub", "both"]:
-            
+             
             print(colored_text("[+] ERROR - Invalid dl_type", "red"))
             print(
                 colored_text(
