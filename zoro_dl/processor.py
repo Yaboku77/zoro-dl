@@ -1,7 +1,7 @@
 import requests, uuid, subprocess, os, time
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
-from .utils import (
+from anime_downloader.sites.utils import (  # Corrected import path
     extract_zoro_id,
     colored_text,
     is_sub_dub,
@@ -10,7 +10,7 @@ from .utils import (
     get_video_resolution,
     get_readable_time,
 )
-from .anime_api import AnimeAPI
+from anime_downloader.sites.anime_api import AnimeAPI  # Corrected import path
 
 
 def download_file(url, save_path):
@@ -31,6 +31,41 @@ def download_file(url, save_path):
                 file.write(chunk)
     else:
         print("Failed to download the file.")
+
+
+def convert_vtt_to_srt(vtt_path, srt_path):
+    """
+    Converts a VTT subtitle file to SRT format.
+
+    Args:
+        vtt_path (str): Path to the input VTT file.
+        srt_path (str): Path to save the output SRT file.
+    """
+    try:
+        with open(vtt_path, 'r', encoding='utf-8') as vtt_file, open(srt_path, 'w', encoding='utf-8') as srt_file:
+            srt_index = 1
+            for line in vtt_file:
+                line = line.strip()
+                if line.startswith('WEBVTT'):
+                    continue  # Skip WEBVTT header
+                if not line:
+                    continue  # Skip empty lines
+
+                if '-->' in line:
+                    srt_file.write(str(srt_index) + '\n')
+                    srt_index += 1
+                    srt_file.write(line.replace('.', ',') + '\n') #Crucial Comma Replacement
+                elif line[0].isdigit() is False and '-->' not in line:
+                     srt_file.write(line + '\n\n') #double newline after subtitle text
+
+    except FileNotFoundError:
+        print(colored_text(f"Error: VTT file not found at {vtt_path}", "red"))
+        return False
+    except Exception as e:
+        print(colored_text(f"Error converting VTT to SRT: {e}", "red"))
+        return False
+    return True
+
 
 
 class ZORO:
@@ -135,18 +170,17 @@ class ZORO:
         if self.dl_type == "both" and find_is_sub_dub == "both":
             watch_id_list.extend(
                 [
-                    f"{watch_id}$episode${episode_id}$sub",
-                    f"{watch_id}$episode${episode_id}$dub",
+                    f"{watch_id}<span class="math-inline">episode</span>{episode_id}$sub",
+                    f"{watch_id}<span class="math-inline">episode</span>{episode_id}$dub",
                 ]
             )
 
         elif self.dl_type == "dub":
-            watch_id_list.extend([f"{watch_id}$episode${episode_id}$dub"])
+            watch_id_list.extend([f"{watch_id}<span class="math-inline">episode</span>{episode_id}$dub"])
 
         elif self.dl_type == "sub":
-            watch_id_list.extend([f"{watch_id}$episode${episode_id}$sub"])
-
-        sources = []
+            watch_id_list.extend([f"{watch_id}<span class="math-inline">episode</span>{episode_id}<span class="math-inline">sub"\]\)
+sources = []
         subtitles = []
         complete_data = {
             "sources": sources,
@@ -158,13 +192,10 @@ class ZORO:
             "episode": episode_number,
             "name": f"{title_episode}. {episode['title']}",
         }
-
         # Using ThreadPoolExecutor for fetching watch and subtitle information concurrently
         with ThreadPoolExecutor(max_workers=2) as executor:
             executor.submit(self.fetch_video_sources, watch_id_list, sources)
-
             if self.dl_type == "both" or self.dl_type == "sub":
-
                 executor.submit(
                     self.fetch_subtitles_sources, watch_id_list[0], subtitles
                 )
@@ -172,13 +203,11 @@ class ZORO:
         self.complete_data = complete_data
         self.video_sources = complete_data["sources"]
         self.subtitle_sources = complete_data["subtitles"]
-
         self.lang_file_name_data = (
             "JPN-ENG"
             if len(self.video_sources) > 1
             else ("JPN" if self.video_sources[0]["subOrdub"] == "sub" else "ENG")
         )
-
         self.subs_file_name_data = (
             "MULTI-SUBS" if len(self.subtitle_sources) > 1 else ("ENG-SUBS" if len(self.subtitle_sources) == 1 else "NO-SUBS")
         )
@@ -276,6 +305,7 @@ class ZORO:
         This method iterates through each subtitle source in the 'subtitle_sources' list.
         It invokes the 'download_file' function to download the subtitle file from the provided URL.
         The downloaded subtitle file is saved with a name based on the language code and a unique code.
+        Then calls covert_vtt_to_srt to convert
 
         Returns:
             None
@@ -291,12 +321,17 @@ class ZORO:
         )
 
         for subs in self.subtitle_sources:
+            vtt_path = "subtitle_{}_{}.vtt".format(subs["lang_639_2"], self.end_code)
+            srt_path = "subtitle_{}_{}.srt".format(subs["lang_639_2"], self.end_code)
+
             download_file(
                 subs["url"],
-                "subtitle_{}_{}.vtt".format(subs["lang_639_2"], self.end_code),
+                vtt_path,
             )
+            if not convert_vtt_to_srt(vtt_path, srt_path):
+                print(colored_text(f"Skipping subtitle conversion for {vtt_path}", "yellow"))
 
-    
+
     def mux_files(self):
         """Mux video and subtitle files into MKV, saving to a fixed path."""
         print(colored_text("[+] MUXING FILES", "green"))
@@ -318,7 +353,7 @@ class ZORO:
                 ffmpeg_opts.extend(
                     [
                         "-i",
-                        "subtitle_{}_{}.vtt".format(
+                        "subtitle_{}_{}.srt".format(  # Use .srt extension
                             source["lang_639_2"], self.end_code
                         ),
                     ]
@@ -425,10 +460,14 @@ class ZORO:
         print(colored_text("[+] Cleaning Temp Subtitle Files", "green"))
 
         for data in self.subtitle_sources:
-            subtitle_filename = "subtitle_{}_{}.vtt".format(
+            vtt_filename = "subtitle_{}_{}.vtt".format(  #Remove VTT Files
                 data["lang_639_2"], self.end_code
             )
-            self.remove_file(subtitle_filename)
+            srt_filename = "subtitle_{}_{}.srt".format(
+                data["lang_639_2"], self.end_code
+            )
+            self.remove_file(vtt_filename) #Remove the VTT File
+            self.remove_file(srt_filename)
 
     def remove_file(self, file_name):
         """
